@@ -4,7 +4,7 @@
   become: true
   vars:
     letsencrypt_enabled: true   # Set to true for production with valid domain
-    domain_name: "majitask.fun"
+    domain_name: "app.majitask.fun"
     email_address: "majitask.app@gmail.com"  # Updated email address
     app_path: "/home/apps/majitask"
   tasks:

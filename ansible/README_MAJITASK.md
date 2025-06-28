@@ -6,7 +6,7 @@ This repository contains Ansible playbooks for setting up a complete server envi
 
 ## Server Configuration
 
-- **Domain:** majitask.fun
+- **Domain:** app.majitask.fun
 - **App Path:** /home/apps/majitask
 - **Web Server:** Nginx (React SPA + Node.js API proxy)
 - **Runtime:** Node.js 20.x with PM2 process manager
@@ -18,7 +18,7 @@ This repository contains Ansible playbooks for setting up a complete server envi
 
 - **Supported OS:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS
 - **Server:** Public IP address with SSH access
-- **DNS:** Domain majitask.fun pointing to your server IP
+- **DNS:** Domain app.majitask.fun pointing to your server IP
 - **SSH Key:** Configured for server access
 
 ## Quick Start

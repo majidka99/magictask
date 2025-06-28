@@ -3,14 +3,14 @@
   hosts: localhost
   become: true
   vars:
-    domain_name: "majitask.fun"
+    domain_name: "app.majitask.fun"
     app_path: "/home/apps/majitask"
     app_user: "majitask"
     db_name: "majitask"
     db_user: "majitask"
     db_password: "majitask_secure_2024!"
     jwt_secret: "your-super-secure-jwt-secret-key-2024"
-    admin_email: "admin@majitask.fun"
+    admin_email: "admin@app.majitask.fun"
     admin_password: "Admin123!"
     
   tasks:
@@ -90,7 +90,7 @@
           
           # API Configuration
           API_KEY=majitask-v3-secure-api-key-2024
-          VITE_API_BASE_URL=https://majitask.fun
+          VITE_API_BASE_URL=https://app.majitask.fun
           VITE_EMAIL_API_KEY=majitask-v3-secure-api-key-2024
           VITE_GOOGLE_PLACES_API_KEY=AIzaSyCw7te83yJnau87fj3xQR1mSWoTD-T13Xk
           

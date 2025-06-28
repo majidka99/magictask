@@ -3,7 +3,7 @@
   hosts: localhost
   become: true
   vars:
-    domain_name: "majitask.fun"
+    domain_name: "app.majitask.fun"
     app_path: "/home/apps/majitask"
     email_address: "majitask.app@gmail.com"
     
@@ -32,7 +32,7 @@
   hosts: localhost
   become: true
   vars:
-    domain_name: "majitask.fun"
+    domain_name: "app.majitask.fun"
     app_path: "/home/apps/majitask"
     
   tasks:

@@ -4,7 +4,7 @@
   become_user: root
   vars:
     nginx_site_filename: "majitask.conf"
-    majitask_domain: "majitask.fun"  # Your domain
+    majitask_domain: "app.majitask.fun"  # Your domain
     app_path: "/home/apps/majitask"  # Your app path
   tasks:
     - name: Update apt cache
