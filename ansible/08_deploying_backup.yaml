@@ -1,0 +1,28 @@
+---
+- name: Deploy backup script and crontab jobs for Majitask server maintenance
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Create /root/bin directory if it doesn't exist
+      file:
+        path: /root/bin
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Deploy backup script to /root/bin/server_backup.sh
+      copy:
+        src: "files/server/server_backup.sh"
+        dest: "/root/bin/server_backup.sh"
+        owner: root
+        group: root
+        mode: '0755'
+    
+    - name: Deploy crontab job file for server tasks
+      copy:
+        src: "files/server/crontab"
+        dest: "/etc/cron.d/server_tasks"
+        owner: root
+        group: root
+        mode: '0644'

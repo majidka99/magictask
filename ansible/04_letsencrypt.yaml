@@ -1,0 +1,116 @@
+---
+- name: Obtain and configure HTTPS using Let's Encrypt for Majitask App
+  hosts: localhost
+  become: true
+  vars:
+    letsencrypt_enabled: true   # Set to true for production with valid domain
+    domain_name: "majitask.fun"
+    email_address: "majitask.app@gmail.com"  # Updated email address
+    app_path: "/home/apps/majitask"
+  tasks:
+    - name: Install Certbot and Nginx plugin
+      apt:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+      when: letsencrypt_enabled
+
+    - name: Create a basic Nginx configuration for Majitask app
+      copy:
+        dest: /etc/nginx/sites-available/majitask.conf
+        content: |
+          server {
+              listen 80;
+              server_name {{ domain_name }};
+
+              root /var/www/html;
+              index index.html;
+
+              # Redirect all HTTP to HTTPS (after SSL is obtained)
+              # return 301 https://$server_name$request_uri;
+
+              # Serve React app (SPA routing)
+              location / {
+                  try_files $uri $uri/ /index.html;
+              }
+
+              # Proxy API requests to Node.js backend
+              location /api/ {
+                  proxy_pass http://localhost:3001;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_cache_bypass $http_upgrade;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+
+              location ~* \.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg)$ {
+                  expires 1y;
+                  add_header Cache-Control "public, immutable";
+                  log_not_found off;
+              }
+
+              # Deny access to sensitive files
+              location ~ /\. {
+                  deny all;
+              }
+
+              # Deny access to Node.js files
+              location ~ \.(json|md|env)$ {
+                  deny all;
+              }
+          }
+      when: letsencrypt_enabled
+      notify:
+        - Restart Nginx
+
+    - name: Enable the Majitask site
+      file:
+        src: /etc/nginx/sites-available/majitask.conf
+        dest: /etc/nginx/sites-enabled/majitask.conf
+        state: link
+      when: letsencrypt_enabled
+
+    - name: Remove default NGINX site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      when: letsencrypt_enabled
+
+    - name: Test NGINX configuration
+      command: nginx -t
+      register: nginx_test
+      failed_when: nginx_test.rc != 0
+      when: letsencrypt_enabled
+
+    - debug:
+        msg: "Nginx configuration test passed."
+      when: letsencrypt_enabled
+
+    - name: Reload NGINX to apply changes
+      service:
+        name: nginx
+        state: reloaded
+      when: letsencrypt_enabled
+
+    - name: Obtain SSL certificate for {{ domain_name }}
+      command: >
+        certbot --nginx -d {{ domain_name }} --email {{ email_address }}
+        --agree-tos --redirect --non-interactive
+      register: certbot_result
+      failed_when: "'The requested nginx plugin does not exist' in certbot_result.stderr"
+      when: letsencrypt_enabled
+
+    - debug:
+        var: certbot_result.stdout
+      when: letsencrypt_enabled
+
+  handlers:
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted

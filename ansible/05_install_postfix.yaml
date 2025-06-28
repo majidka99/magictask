@@ -1,0 +1,96 @@
+---
+- name: Install and configure Postfix MajiTask on majitask.fun
+  hosts: localhost
+  become: true
+  vars:
+    domain: "localhost"
+    email_user: "majitask.app@gmail.com"
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    smtp_password: "FFaa8645!"  # we will enter the password here, before we start running the playbook
+    postfix_version: ""  # Leave empty for latest, or specify version like "3.6.4-1ubuntu1.3"
+  tasks:
+    - name: Install Postfix
+      apt:
+        name: "postfix{% if postfix_version %}={{ postfix_version }}{% endif %}"
+        state: present
+        update_cache: yes
+      notify:
+        - Restart Postfix
+
+    - name: Configure Postfix relayhost in main.cf
+      lineinfile:
+        path: /etc/postfix/main.cf
+        regexp: '^relayhost'
+        line: "relayhost = [{{ smtp_server }}]:{{ smtp_port }}"
+        create: yes
+      notify:
+        - Restart Postfix
+
+    - name: Harden Postfix configuration for domain and secure submission
+      blockinfile:
+        path: /etc/postfix/main.cf
+        marker: "# {mark} ANSIBLE POSTFIX DOMAIN & SECURITY CONFIG"
+        block: |
+          # Domain-specific configuration
+          myhostname = mail.{{ domain }}
+          myorigin = {{ domain }}
+          mydestination = {{ domain }}, localhost.{{ domain }}, localhost
+          relay_domains = {{ domain }}
+
+          # Secure SMTP settings for port 587 (STARTTLS)
+          smtp_use_tls = yes
+          smtp_tls_security_level = encrypt
+          smtp_tls_note_starttls_offer = yes
+
+          # Enforce HELO/EHLO requirement for additional security
+          smtpd_helo_required = yes
+
+          # SASL authentication settings for secure relay
+          smtp_sasl_auth_enable = yes
+          smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+          smtp_sasl_security_options = noanonymous
+      notify:
+        - Restart Postfix
+
+    - name: Create SASL password file for authentication
+      copy:
+        dest: /etc/postfix/sasl_passwd
+        content: "[{{ smtp_server }}]:{{ smtp_port }}    {{ email_user }}:{{ smtp_password }}"
+        owner: root
+        group: root
+        mode: '0600'
+      notify:
+        - Postmap SASL Password
+        - Restart Postfix
+
+    - name: Enhance Postfix configuration with additional TLS and relay restrictions
+      blockinfile:
+        path: /etc/postfix/main.cf
+        marker: "# {mark} ANSIBLE POSTFIX TLS & RELAY CONFIG"
+        block: |
+          # Additional TLS configuration as per Ubuntu documentation
+          smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+          smtp_tls_session_cache_database = btree:${data_directory}/smtp_tls_session_cache
+          smtp_tls_loglevel = 1
+
+          # Require TLS for client authentication
+          smtpd_tls_auth_only = yes
+
+          # Restrict mail relay to authorized clients only
+          smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+          mynetworks = 127.0.0.0/8
+
+          # Bind Postfix to loopback interface when only local relay is needed
+          inet_interfaces = loopback-only
+      notify:
+        - Restart Postfix
+
+  handlers:
+    - name: Postmap SASL Password
+      command: postmap /etc/postfix/sasl_passwd
+
+    - name: Restart Postfix
+      service:
+        name: postfix
+        state: restarted

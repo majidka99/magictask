@@ -1,0 +1,287 @@
+---
+- name: Security Hardening for Majitask Application Server
+  hosts: localhost
+  become: true
+  vars:
+    app_path: "/home/apps/majitask"
+    domain_name: "majitask.fun"
+
+  tasks:
+    ####################################################################
+    # System Security Hardening
+    ####################################################################
+    - name: Install fail2ban for intrusion prevention
+      apt:
+        name: fail2ban
+        state: present
+
+    - name: Configure fail2ban for SSH protection
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [DEFAULT]
+          bantime = 3600
+          findtime = 600
+          maxretry = 3
+          
+          [sshd]
+          enabled = true
+          port = ssh
+          filter = sshd
+          logpath = /var/log/auth.log
+          maxretry = 3
+          bantime = 3600
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - restart fail2ban
+
+    ####################################################################
+    # Nginx Security Hardening
+    ####################################################################
+    - name: Create systemd drop-in directory for Nginx
+      file:
+        path: /etc/systemd/system/nginx.service.d
+        state: directory
+        mode: '0755'
+
+    - name: Add security hardening to Nginx service
+      copy:
+        dest: /etc/systemd/system/nginx.service.d/security.conf
+        content: |
+          [Service]
+          NoNewPrivileges=true
+          ProtectSystem=strict
+          ProtectHome=true
+          PrivateTmp=true
+          ProtectKernelTunables=true
+          ProtectControlGroups=true
+          RestrictSUIDSGID=true
+          RemoveIPC=true
+          RestrictRealtime=true
+          ReadWritePaths={{ app_path }}
+          ReadWritePaths=/var/log/nginx
+          ReadWritePaths=/var/lib/nginx
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - reload systemd
+        - restart nginx
+
+    - name: Enhance Nginx security configuration
+      copy:
+        dest: /etc/nginx/conf.d/security.conf
+        content: |
+          # Security headers
+          add_header X-Frame-Options "SAMEORIGIN" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-XSS-Protection "1; mode=block" always;
+          add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+          add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+          
+          # Hide Nginx version
+          server_tokens off;
+          
+          # Limit request size
+          client_max_body_size 10M;
+          
+          # Rate limiting
+          limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+          limit_req_zone $binary_remote_addr zone=api:10m rate=20r/m;
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - restart nginx
+
+    ####################################################################
+    # Log Rotation Configuration
+    ####################################################################
+    - name: Create logrotate configuration for Nginx
+      copy:
+        dest: /etc/logrotate.d/nginx
+        content: |
+          /var/log/nginx/*.log {
+              daily
+              missingok
+              rotate 14
+              compress
+              delaycompress
+              notifempty
+              create 0640 www-data adm
+              sharedscripts
+              postrotate
+                  [ -f /var/run/nginx.pid ] && kill -USR1 `cat /var/run/nginx.pid`
+              endscript
+          }
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Create logrotate configuration for application logs
+      copy:
+        dest: /etc/logrotate.d/majitask
+        content: |
+          {{ app_path }}/logs/*.log {
+              daily
+              missingok
+              rotate 30
+              compress
+              delaycompress
+              notifempty
+              create 0644 www-data www-data
+              copytruncate
+          }
+        owner: root
+        group: root
+        mode: '0644'
+
+    ####################################################################
+    # File System Security
+    ####################################################################
+    - name: Set secure permissions on application directory
+      file:
+        path: "{{ app_path }}"
+        owner: www-data
+        group: www-data
+        mode: '0755'
+        recurse: yes
+
+    - name: Create logs directory if it doesn't exist
+      file:
+        path: "{{ app_path }}/logs"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Secure sensitive files (if they exist)
+      file:
+        path: "{{ item }}"
+        mode: '0600'
+        owner: www-data
+        group: www-data
+      loop:
+        - "{{ app_path }}/.env"
+        - "{{ app_path }}/config/database.php"
+        - "{{ app_path }}/config/app.php"
+      ignore_errors: yes
+
+    ####################################################################
+    # System Tuning for Security
+    ####################################################################
+    - name: Configure kernel parameters for security
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { name: 'net.ipv4.conf.all.send_redirects', value: '0' }
+        - { name: 'net.ipv4.conf.default.send_redirects', value: '0' }
+        - { name: 'net.ipv4.conf.all.accept_redirects', value: '0' }
+        - { name: 'net.ipv4.conf.default.accept_redirects', value: '0' }
+        - { name: 'net.ipv4.conf.all.secure_redirects', value: '0' }
+        - { name: 'net.ipv4.conf.default.secure_redirects', value: '0' }
+        - { name: 'net.ipv4.ip_forward', value: '0' }
+        - { name: 'net.ipv4.conf.all.log_martians', value: '1' }
+        - { name: 'net.ipv4.conf.default.log_martians', value: '1' }
+        - { name: 'kernel.dmesg_restrict', value: '1' }
+
+    ####################################################################
+    # SSH Hardening
+    ####################################################################
+    - name: Harden SSH configuration
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        backup: yes
+      loop:
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?MaxAuthTries', line: 'MaxAuthTries 3' }
+        - { regexp: '^#?ClientAliveInterval', line: 'ClientAliveInterval 300' }
+        - { regexp: '^#?ClientAliveCountMax', line: 'ClientAliveCountMax 2' }
+        - { regexp: '^#?Protocol', line: 'Protocol 2' }
+      notify:
+        - restart ssh
+
+    ####################################################################
+    # Additional Security Tools
+    ####################################################################
+    - name: Install security monitoring tools
+      apt:
+        name:
+          - lynis      # Security auditing tool
+          - rkhunter   # Rootkit hunter
+          - chkrootkit # Alternative rootkit checker
+        state: present
+
+    - name: Create daily security check script
+      copy:
+        dest: /root/bin/security_check.sh
+        content: |
+          #!/bin/bash
+          # Daily security check for Majitask server
+          
+          DATE=$(date +"%Y-%m-%d")
+          LOG="/var/log/security_check_${DATE}.log"
+          
+          echo "=== Security Check Report - ${DATE} ===" > $LOG
+          echo "" >> $LOG
+          
+          # Check for failed login attempts
+          echo "Recent failed login attempts:" >> $LOG
+          grep "Failed password" /var/log/auth.log | tail -10 >> $LOG
+          echo "" >> $LOG
+          
+          # Check for unusual network connections
+          echo "Current network connections:" >> $LOG
+          netstat -tulpn | grep LISTEN >> $LOG
+          echo "" >> $LOG
+          
+          # Check disk usage
+          echo "Disk usage:" >> $LOG
+          df -h >> $LOG
+          echo "" >> $LOG
+          
+          # Check for large files in temp directories
+          echo "Large files in temp directories:" >> $LOG
+          find /tmp /var/tmp -size +100M 2>/dev/null >> $LOG
+          echo "" >> $LOG
+          
+          # Email the report
+          mail -s "Security Check Report - {{ domain_name }}" admin@{{ domain_name }} < $LOG
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Ensure /root/bin directory exists
+      file:
+        path: /root/bin
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+  handlers:
+    - name: reload systemd
+      command: systemctl daemon-reload
+
+    - name: restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+
+    - name: restart fail2ban
+      systemd:
+        name: fail2ban
+        state: restarted
+
+    - name: restart ssh
+      systemd:
+        name: ssh
+        state: restarted

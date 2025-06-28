@@ -1,0 +1,36 @@
+# Majitask Server Configuration Template
+
+# Copy this file and edit the values below for your specific setup
+
+## Server Details
+SERVER_IP="YOUR_SERVER_PUBLIC_IP"
+DOMAIN="majitask.fun"
+SSH_USER="ubuntu"  # or your SSH username
+SSH_KEY_PATH="~/.ssh/your_private_key"
+
+## Application Settings
+APP_PATH="/home/apps/majitask"
+APP_USER="www-data"
+APP_GROUP="www-data"
+
+## Email Configuration
+ADMIN_EMAIL="admin@majitask.fun"
+BACKUP_EMAIL="admin@majitask.fun"
+
+## SSL/HTTPS Settings
+ENABLE_SSL=true
+LETSENCRYPT_EMAIL="admin@majitask.fun"
+
+## Database (if needed)
+# DB_NAME="majitask_db"
+# DB_USER="majitask_user"
+# DB_PASSWORD="secure_password"
+
+## Backup Settings
+BACKUP_PATH="/archive/backup/majitask"
+BACKUP_RETENTION_DAYS=7
+
+# Instructions:
+# 1. Copy this file: cp config.template config.sh
+# 2. Edit config.sh with your actual values
+# 3. Source it before running playbooks: source config.sh

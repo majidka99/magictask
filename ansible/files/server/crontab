@@ -1,0 +1,2 @@
+0 17 * * * /usr/bin/certbot renew --quiet
+0 1 * * 6 /root/bin/server_backup.sh 2>&1 > /var/log/server_backup.log

@@ -1,0 +1,12 @@
+---
+- name: Deploy skeleton files to /etc/skel
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Copy skeleton files to /etc/skel
+      copy:
+        src: files/skeleton/
+        dest: /etc/skel/
+        owner: root
+        group: root
+        mode: '0644'
