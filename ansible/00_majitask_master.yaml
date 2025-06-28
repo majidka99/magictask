@@ -5,7 +5,7 @@
   vars:
     domain_name: "app.majitask.fun"
     app_path: "/home/apps/majitask"
-    email_address: "majitask.app@gmail.com"
+    email_address: "majitask.fun@gmail.com"
     
   tasks:
     - name: Ensure the majitask app directory exists

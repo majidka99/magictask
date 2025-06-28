@@ -10,7 +10,7 @@
     db_user: "majitask"
     db_password: "majitask_secure_2024!"
     jwt_secret: "your-super-secure-jwt-secret-key-2024"
-    admin_email: "admin@app.majitask.fun"
+    admin_email: "majitask.fun@gmail.com"
     admin_password: "Admin123!"
     
   tasks:
@@ -51,7 +51,7 @@
         content: |
           # Server Configuration
           NODE_ENV=production
-          PORT=3001
+          PORT=3863
           HOST=0.0.0.0
           
           # Database Configuration
@@ -81,9 +81,9 @@
           SMTP_HOST=smtp.gmail.com
           SMTP_PORT=587
           SMTP_SECURE=false
-          SMTP_USER=majitask.app@gmail.com
+          SMTP_USER=majitask.fun@gmail.com
           SMTP_PASS=FFaa8645!
-          FROM_EMAIL=majitask.app@gmail.com
+          FROM_EMAIL=majitask.fun@gmail.com
           FROM_NAME=MajiTask Notifications
           EMAIL_RATE_LIMIT=10
           EMAIL_RATE_WINDOW=900000
@@ -186,7 +186,7 @@
               max_memory_restart: '1G',
               env: {
                 NODE_ENV: 'production',
-                PORT: 3001
+                PORT: 3863
               },
               env_file: '.env',
               error_file: '{{ app_path }}/logs/err.log',
@@ -227,7 +227,7 @@
 
     - name: Wait for application to start
       wait_for:
-        port: 3001
+        port: 3863
         host: localhost
         delay: 5
         timeout: 30

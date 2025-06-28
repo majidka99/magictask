@@ -21,7 +21,7 @@ console.log('🔧 Environment loaded:', {
 });
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3863;
 
 // Security middleware
 app.use(helmet({
@@ -32,7 +32,7 @@ app.use(helmet({
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://app.majitask.fun', 'https://majitask.fun'] 
-    : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001'],
+    : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3863'],
   credentials: true
 }));
 
@@ -75,6 +75,7 @@ if (process.env.NODE_ENV === 'production') {
     res.json({
       message: 'MajiTask Backend API',
       dev: 'In development mode. Frontend should be running on port 5173',
+      port: PORT,
       endpoints: {
         health: '/api/health',
         email: '/api/email/*'

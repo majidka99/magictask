@@ -5,7 +5,7 @@
   vars:
     letsencrypt_enabled: true   # Set to true for production with valid domain
     domain_name: "app.majitask.fun"
-    email_address: "majitask.app@gmail.com"  # Updated email address
+    email_address: "majitask.fun@gmail.com"  # Updated email address
     app_path: "/home/apps/majitask"
   tasks:
     - name: Install Certbot and Nginx plugin
@@ -37,7 +37,7 @@
 
               # Proxy API requests to Node.js backend
               location /api/ {
-                  proxy_pass http://localhost:3001;
+                  proxy_pass http://localhost:3863;
                   proxy_http_version 1.1;
                   proxy_set_header Upgrade $http_upgrade;
                   proxy_set_header Connection 'upgrade';
