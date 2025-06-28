@@ -2,11 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
 import emailRoutes from './routes/emailRoutes.js';
+import authRoutes from './modules/auth/auth.routes.js';
 
 // Load environment variables from the parent directory
 const __filename = fileURLToPath(import.meta.url);
@@ -46,10 +48,12 @@ const emailLimiter = rateLimit({
 });
 
 // Body parsing middleware
+app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/email', emailLimiter, emailRoutes);
 
 // Health check endpoint
