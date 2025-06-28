@@ -79,32 +79,6 @@
 
 ---
 
-## 🔧 CONFIGURATION
-
-### **Environment Variables** (`.env`)
-```env
-# SMTP Configuration (Forpsi)
-SMTP_HOST=smtp.forpsi.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=majid@steinerkovarik.com
-SMTP_PASS=Capturenx2!
-
-# API Configuration
-API_KEY=majitask-dev-key-2024
-VITE_EMAIL_API_KEY=majitask-dev-key-2024
-
-# Google Places API
-VITE_GOOGLE_PLACES_API_KEY=AIzaSyCw7te83yJnau87fj3xQR1mSWoTD-T13Xk
-```
-
-### **Systemd Service** (`majitask.service`)
-- **Command**: `npm start` (runs unified server)
-- **Port**: 3001
-- **Auto-restart**: Enabled
-- **User**: majid
-
----
 
 ## 🧪 TESTING RESULTS
 

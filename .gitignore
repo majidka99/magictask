@@ -58,3 +58,6 @@ ansible/config
 # Backup files
 *.bak
 *.backup
+
+# Ignore documentation and reports
+docs/reports/
