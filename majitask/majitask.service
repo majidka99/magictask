@@ -1,14 +1,14 @@
 [Unit]
-Description=MajiTask - Task Management Application
-Documentation=file:///home/majid/majitask/VM_DEPLOYMENT_GUIDE.md
+Description=MajiTask_v1 - Task Management Application
+Documentation=file:///home/apps/majitask_v1/VM_DEPLOYMENT_GUIDE.md
 After=network.target
 Wants=network.target
 
 [Service]
 Type=simple
-User=majid
-Group=majid
-WorkingDirectory=/home/majid/majitask
+User=majitask_v1
+Group=majitask_v1
+WorkingDirectory=/home/apps/majitask_v1/majitask
 Environment=NODE_ENV=production
 Environment=PORT=3863
 Environment=HOST=0.0.0.0
@@ -17,14 +17,14 @@ Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=majitask
+SyslogIdentifier=majitask_v1
 
 # Security settings
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/majid/majitask
+ReadWritePaths=/home/apps/majitask_v1/majitask
 
 [Install]
 WantedBy=multi-user.target

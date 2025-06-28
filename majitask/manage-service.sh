@@ -9,18 +9,18 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-SERVICE_NAME="majitask.service"
+SERVICE_NAME="majitask_v1.service"
 
 print_status() {
-    echo -e "${BLUE}=== MajiTask Service Status ===${NC}"
+    echo -e "${BLUE}=== MajiTask_v1 Service Status ===${NC}"
     systemctl status $SERVICE_NAME --no-pager -l
     echo
     
     if systemctl is-active --quiet $SERVICE_NAME; then
         echo -e "${GREEN}✅ Service is running${NC}"
         echo -e "${GREEN}🌐 Access URLs:${NC}"
-        echo -e "   Local:  http://localhost:3001/"
-        echo -e "   Network: http://$(hostname -I | awk '{print $1}'):3001/"
+        echo -e "   Local:  http://localhost:3863/"
+        echo -e "   Network: http://$(hostname -I | awk '{print $1}'):3863/"
     else
         echo -e "${RED}❌ Service is not running${NC}"
     fi
@@ -39,7 +39,7 @@ show_logs() {
 
 test_connection() {
     echo -e "${BLUE}=== Testing Connection ===${NC}"
-    if curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/ | grep -q "200"; then
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:3863/ | grep -q "200"; then
         echo -e "${GREEN}✅ Application is responding (HTTP 200)${NC}"
     else
         echo -e "${RED}❌ Application is not responding${NC}"

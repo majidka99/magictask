@@ -525,3 +525,55 @@ export class AuthService {
     // Revoke all sessions except current one would be handled in the route
   }
 }
+
+// Authentication middleware for protecting routes
+export const authenticateToken = async (req: any, res: any, next: any) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    
+    if (!token) {
+      return res.status(401).json({ error: 'Access token required' });
+    }
+    
+    const decoded = AuthService.verifyToken(token);
+    
+    // Check if token is blacklisted (revoked session)
+    const session = await query(
+      'SELECT id FROM user_sessions WHERE token_jti = ? AND revoked_at IS NULL AND expires_at > NOW()',
+      [decoded.jti]
+    );
+    
+    if (session.length === 0) {
+      return res.status(401).json({ error: 'Token has been revoked' });
+    }
+    
+    // Update last used timestamp
+    await query(
+      'UPDATE user_sessions SET last_used_at = NOW() WHERE token_jti = ?',
+      [decoded.jti]
+    );
+    
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(403).json({ error: error instanceof Error ? error.message : 'Invalid token' });
+  }
+};
+
+// Admin-only middleware
+export const requireAdmin = (req: any, res: any, next: any) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+};
+
+// User self-access or admin middleware
+export const requireSelfOrAdmin = (req: any, res: any, next: any) => {
+  const targetUserId = parseInt(req.params.userId || req.params.id);
+  if (req.user.userId !== targetUserId && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  next();
+};

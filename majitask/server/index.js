@@ -9,6 +9,9 @@ import dotenv from 'dotenv';
 
 import emailRoutes from './routes/emailRoutes.js';
 import authRoutes from './modules/auth/auth.routes.js';
+import taskRoutes from './modules/tasks/task.routes.js';
+import migrationRoutes from './modules/migration/localstorage.routes.js';
+import { authenticateToken } from './modules/auth/auth.service.js';
 
 // Load environment variables from the parent directory
 const __filename = fileURLToPath(import.meta.url);
@@ -55,6 +58,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/email', emailLimiter, emailRoutes);
+app.use('/api/tasks', authenticateToken, taskRoutes);
+app.use('/api/migration', authenticateToken, migrationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -82,7 +87,10 @@ if (process.env.NODE_ENV === 'production') {
       port: PORT,
       endpoints: {
         health: '/api/health',
-        email: '/api/email/*'
+        auth: '/api/auth/*',
+        email: '/api/email/*',
+        tasks: '/api/tasks/*',
+        migration: '/api/migration/*'
       }
     });
   });

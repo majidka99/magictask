@@ -10,7 +10,16 @@
     "start": "node server/index.js",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "migrate": "mysql -u $DB_USER -p$DB_PASSWORD -h $DB_HOST $DB_NAME < migrations/20250701_create_auth_tables.sql"
+    "migrate:auth": "mysql -u $DB_USER -p$DB_PASSWORD -h $DB_HOST $DB_NAME < migrations/20250701_create_auth_tables.sql",
+    "migrate:tasks": "mysql -u $DB_USER -p$DB_PASSWORD -h $DB_HOST $DB_NAME < migrations/20250702_create_tasks_tables.sql",
+    "migrate:all": "npm run migrate:auth && npm run migrate:tasks",
+    "deploy:prod": "sudo ./deploy-production.sh",
+    "verify:prod": "./verify-production.sh",
+    "backup:now": "sudo /root/bin/server_backup.sh",
+    "logs:app": "journalctl -u majitask_v1 -f",
+    "logs:backup": "tail -f /var/log/majitask_v1_backup.log",
+    "status": "systemctl status majitask_v1",
+    "restart": "sudo systemctl restart majitask_v1"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
@@ -30,7 +39,8 @@
     "bcrypt": "^5.1.1",
     "jsonwebtoken": "^9.0.2",
     "zod": "^3.22.4",
-    "compression": "^1.7.4"
+    "compression": "^1.7.4",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/google.maps": "^3.58.1",
@@ -42,6 +52,7 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/cors": "^2.8.17",
     "@types/compression": "^1.7.5",
+    "@types/uuid": "^9.0.7",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.0.3",
