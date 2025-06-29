@@ -1,9 +1,0 @@
-syntax on
-set nocompatible
-set paste
-set mouse-=a
-set nonumber
-set ruler
-set nobackup
-set tabstop=4
-set shiftwidth=4
